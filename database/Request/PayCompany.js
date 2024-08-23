@@ -1,5 +1,12 @@
 const axios = require("axios");
 const { v4 } = require("uuid");
+let tariff = {
+  5: 349,
+  20: 1260,
+  50: 2800,
+  100: 4900,
+  200: 9900,
+};
 const Pay = async (amuntValue, paymentMethodId, userID, nextTimePay) => {
   const idempotenceKey = v4();
   try {
@@ -7,15 +14,15 @@ const Pay = async (amuntValue, paymentMethodId, userID, nextTimePay) => {
       "https://api.yookassa.ru/v3/payments",
       {
         amount: {
-          value: amuntValue,
+          value: tariff[amuntValue],
           currency: "RUB",
         },
         capture: true,
         payment_method_id: paymentMethodId,
-        description: "Автоплатеж",
+        description: "Автоплатеж - компания",
         metadata: {
-          userId: userID,
-          paymentType: "premium-update",
+          creatorID: userID,
+          paymentType: "company-update",
           nextTimePay,
         },
       },

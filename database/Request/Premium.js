@@ -1,7 +1,7 @@
 const PremiumScheme = require("../Schema/premium");
 const { Temporal } = require("@js-temporal/polyfill");
 const { DateTime } = require("luxon");
-const Pay = require("./Pay");
+const Pay = require("./PayPremium");
 
 function getCurrentDateInMSK() {
   const nowInMoscow = DateTime.now().setZone("Europe/Moscow");

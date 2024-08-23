@@ -1,137 +1,52 @@
 const CompanySchema = require("../Schema/Company");
-const UserSchema = require("../Schema/UserSchema");
 const { v4 } = require("uuid");
+const { DateTime } = require("luxon");
 const { Temporal } = require("@js-temporal/polyfill");
+const Pay = require("./PayCompany");
 
-async function createCompany({
-  title,
-  INN,
-  description,
-  avatar,
-  creatorID,
-  countStaffs,
-  paymentId,
-  isAutoPay,
-  paymentMethod,
-  certificate_of_state_registration = null,
-  tax_registration_certificate = null,
-  egrul_egrip_record_sheet = null,
-}) {
+function getCurrentDateInMSK() {
+  const nowInMoscow = DateTime.now().setZone("Europe/Moscow");
+  return nowInMoscow.toFormat("dd.MM.yyyy");
+}
+function getNextMonth() {
+  const now = Temporal.Now.plainDateISO();
+  let nextDate = now.add({ months: 1 });
+  const formattedDate = `${String(nextDate.day).padStart(2, "0")}.${String(
+    nextDate.month
+  ).padStart(2, "0")}.${nextDate.year}`;
+
+  return formattedDate;
+}
+
+const removeComapany = async () => {
   try {
-    let findFirst = await CompanySchema.findOne({
-      $or: [{ INN }, { creatorID }],
+    let correntDate = await getCurrentDateInMSK();
+    let findCurrentCompany = await CompanySchema.find({
+      nextPayDay: correntDate,
     });
-    if (findFirst) return { success: false, error: "Company already exists" };
-
-    const now = await Temporal.Now.plainDateTimeISO();
-    const nextPayDay = await now
-      .add({ months: 1 })
-      .toPlainDate()
-      .toLocaleString("ru-RU", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
+    if (findCurrentCompany == []) return false;
+    for (const item of findCurrentCompany) {
+      if (item.isAutoPay) {
+        let pay = await Pay(
+          item.countStaffs,
+          item.paymentId,
+          item.creatorID,
+          getNextMonth()
+        );
+        console.log("Оплата премиум:", pay);
+        return;
+      }
+      let removeCompany = await CompanySchema.findOneAndDelete({
+        creatorID: item.creatorID,
       });
-    const company = new CompanySchema({
-      id: v4(),
-      title,
-      INN,
-      description,
-      avatar,
-      nextPayDay,
-      isAutoPay,
-      paymentId,
-      paymentMethod,
-      creatorID,
-      userList: [{ userID: creatorID }],
-      dataCreated: now,
-      countStaffs,
-      documents: [
-        {
-          certificate_of_state_registration,
-          tax_registration_certificate,
-          egrul_egrip_record_sheet,
-        },
-      ],
-    });
-    const user = await UserSchema.findOne({ id: creatorID });
-    if (!user) return { success: false, error: "User not found" };
-    let saveCompany = await company.save(); // Сохранение объекта
-    return { success: true, data: saveCompany };
-  } catch (error) {
-    console.error("Ошибка при создании компании:", error);
-    return { success: false, error: error.message || "Error" };
-  }
-}
-
-async function findCompanyOfUser(userID) {
-  try {
-    console.log(userID);
-    let findFirst = await CompanySchema.findOne({
-      userList: { $elemMatch: { userID: userID } }, // Ищем, чтобы userID был в массиве userList
-      isVarefy: true,
-    });
-    if (!findFirst) return { success: false, message: "Компании нет" };
-    return { success: true, data: findFirst };
-  } catch (error) {
-    console.error(error);
-    return { success: false, error: "Error" };
-  }
-}
-async function findCompanyOfINNorTitle(text) {
-  try {
-    // Создаем регулярное выражение для поиска без учета регистра
-    const regex = new RegExp(`(^${text}.*|.*${text}$|.*${text}.*)`, "i");
-
-    // Выполняем поиск в базе данных
-    let findFirst = await CompanySchema.find({
-      $or: [{ INN: regex }, { title: regex }],
-    }).select("avatar INN title");
-
-    // Если не нашли совпадений
-    if (findFirst.length === 0) {
-      return { success: false, message: "Компании нет" };
+      console.log("Удаляем подписку:", removeCompany);
     }
-
-    // Возвращаем успешный результат с найденными данными
-    return { success: true, data: findFirst };
-  } catch (error) {
-    console.error(error);
-    return { success: false, error: "Error" };
+    console.log("Текущие подписки:", findCurrentCompany);
+    return true;
+  } catch (e) {
+    console.error("Ошибка при удалении подписок:", e);
+    return false;
   }
-}
-
-async function findCompanyOfINN(INN) {
-  try {
-    let findFirst = await CompanySchema.findOne({
-      INN: INN,
-      isVarefy: true,
-    });
-    console.log(findFirst, " - тут норм");
-    if (!findFirst) return { success: false, message: "Компании нет" };
-    return { success: true, data: findFirst };
-  } catch (error) {
-    console.error(error);
-    return { success: false, error: "Error" };
-  }
-}
-
-async function findCompanyOfUserAndINN(userID, INN) {
-  try {
-    let findFirst = await CompanySchema.findOne({
-      $or: [{ INN }, { creatorID: userID }],
-    });
-    if (findFirst) return { success: false, error: "Company already exists" };
-    return { success: true, data: findFirst };
-  } catch (error) {
-    console.error(error);
-    return { success: false, error: "Error" };
-  }
-}
-module.exports = {
-  createCompany,
-  findCompanyOfINN,
-  findCompanyOfUser,
-  findCompanyOfUserAndINN,
-  findCompanyOfINNorTitle,
 };
+
+module.exports = removeComapany;
