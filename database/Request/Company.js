@@ -23,6 +23,8 @@ const removeComapany = async () => {
     let correntDate = await getCurrentDateInMSK();
     let findCurrentCompany = await CompanySchema.find({
       nextPayDay: correntDate,
+      isVarefy: true,
+      isFreez: false,
     });
     if (findCurrentCompany == []) return false;
     for (const item of findCurrentCompany) {
@@ -36,10 +38,15 @@ const removeComapany = async () => {
         console.log("Оплата премиум:", pay);
         return;
       }
-      let removeCompany = await CompanySchema.findOneAndDelete({
-        creatorID: item.creatorID,
-      });
-      console.log("Удаляем подписку:", removeCompany);
+      let freezCompany = await CompanySchema.findOneAndUpdate(
+        {
+          creatorID: item.creatorID,
+        },
+        {
+          isFreez: true,
+        }
+      );
+      console.log("Заморозка компании:", freezCompany);
     }
     console.log("Текущие подписки:", findCurrentCompany);
     return true;
