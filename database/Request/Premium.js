@@ -1,11 +1,9 @@
 const PremiumScheme = require("../Schema/premium");
 const { Temporal } = require("@js-temporal/polyfill");
-const { DateTime } = require("luxon");
 const Pay = require("./PayPremium");
 
 function getCurrentDateInMSK() {
-  const nowInMoscow = DateTime.now().setZone("Europe/Moscow");
-  return nowInMoscow.toFormat("dd.MM.yyyy");
+  return Temporal.Now.plainDateISO();
 }
 function getNextDateInDays(typePremium) {
   const now = Temporal.Now.plainDateISO();
@@ -25,23 +23,19 @@ function getNextDateInDays(typePremium) {
       throw new Error("Invalid typePremium value");
   }
 
-  // Преобразуем дату в формат дд.мм.гггг
-  const formattedDate = `${String(nextDate.day).padStart(2, "0")}.${String(
-    nextDate.month
-  ).padStart(2, "0")}.${nextDate.year}`;
-
-  return formattedDate;
+  return nextDate;
 }
 
 const removePremium = async () => {
   try {
     let correntDate = await getCurrentDateInMSK();
+    console.log("Текущие подписки:", correntDate.toString());
     let findCurrentPremium = await PremiumScheme.find({
       nextTimePay: correntDate,
     });
     if (findCurrentPremium == []) return false;
     for (const item of findCurrentPremium) {
-      if (item.save) {
+      if (item.saved) {
         let pay = await Pay(
           item.amount,
           item.paymentId,

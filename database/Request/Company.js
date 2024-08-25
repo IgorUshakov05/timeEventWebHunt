@@ -1,21 +1,15 @@
 const CompanySchema = require("../Schema/Company");
 const { v4 } = require("uuid");
-const { DateTime } = require("luxon");
 const { Temporal } = require("@js-temporal/polyfill");
 const Pay = require("./PayCompany");
 
 function getCurrentDateInMSK() {
-  const nowInMoscow = DateTime.now().setZone("Europe/Moscow");
-  return nowInMoscow.toFormat("dd.MM.yyyy");
+  return Temporal.Now.plainDateISO();
 }
 function getNextMonth() {
   const now = Temporal.Now.plainDateISO();
   let nextDate = now.add({ months: 1 });
-  const formattedDate = `${String(nextDate.day).padStart(2, "0")}.${String(
-    nextDate.month
-  ).padStart(2, "0")}.${nextDate.year}`;
-
-  return formattedDate;
+  return nextDate;
 }
 
 const removeComapany = async () => {
