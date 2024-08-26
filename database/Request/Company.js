@@ -6,13 +6,22 @@ const Pay = require("./PayCompany");
 function getCurrentDateInMSK() {
   return Temporal.Now.plainDateISO();
 }
+
+function getTimeSixDayAgo() {
+  // Получаем текущую дату
+  const today = Temporal.Now.plainDateISO();
+  // Вычисляем дату 6 дней назад
+  const sixDaysAgo = today.subtract({ days: 6 });
+  console.log(sixDaysAgo.toString());
+  return sixDaysAgo;
+}
 function getNextMonth() {
   const now = Temporal.Now.plainDateISO();
   let nextDate = now.add({ months: 1 });
   return nextDate;
 }
 
-const removeComapany = async () => {
+const payComapany = async () => {
   try {
     let correntDate = await getCurrentDateInMSK();
     let findCurrentCompany = await CompanySchema.find({
@@ -50,4 +59,32 @@ const removeComapany = async () => {
   }
 };
 
-module.exports = removeComapany;
+async function removeOldCompanyRecords() {
+  try {
+    // Получаем дату 6 дней назад
+    const sixDaysAgo = getTimeSixDayAgo();
+
+    // Ищем документы, соответствующие условиям
+    const companiesToDelete = await CompanySchema.find({
+      nextPayDay: sixDaysAgo,
+      isFreez: true,
+    });
+
+    // Проверяем, были ли найдены документы
+    if (companiesToDelete.length > 0) {
+      // Удаляем найденные документы
+      await CompanySchema.deleteMany({
+        nextPayDay: sixDaysAgo,
+        isFreez: true,
+      });
+
+      console.log(`${companiesToDelete.length} documents deleted.`);
+    } else {
+      console.log("No documents found to delete.");
+    }
+  } catch (error) {
+    console.error("Error removing documents:", error);
+  }
+}
+
+module.exports = { payComapany, removeOldCompanyRecords };
