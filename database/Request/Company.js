@@ -72,6 +72,36 @@ async function removeOldCompanyRecords() {
 
     // Проверяем, были ли найдены документы
     if (companiesToDelete.length > 0) {
+      for (const company of companiesToDelete) {
+        const filesToDelete = [
+          company.documents[0].certificate_of_state_registration
+            .split("/")
+            .pop(),
+          company.documents[0].tax_registration_certificate.split("/").pop(),
+          company.documents[0].egrul_egrip_record_sheet.split("/").pop(),
+        ];
+        console.log(filesToDelete);
+        let deleteFile = await fetch("http://localhost:3001/documtns/remove", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ files: filesToDelete }),
+        });
+        let deleteAvatar = await fetch(
+          "http://localhost:3001/avatarCompany/remove",
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ file: company.avatar.split("/").pop() }),
+          }
+        );
+        let data = await deleteFile.json();
+        let dataAvatar = await deleteAvatar.json();
+        console.log(data, dataAvatar);
+      }
       // Удаляем найденные документы
       await CompanySchema.deleteMany({
         nextPayDay: sixDaysAgo,
