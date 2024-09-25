@@ -9,7 +9,11 @@ function getCurrentDateInMSK() {
 let findVacancyForDelete = async () => {
   console.log(getCurrentDateInMSK().toString());
   let currentDate = await getCurrentDateInMSK();
-  return Vacancy.deleteMany({ dateAndTimeCreated: currentDate });
+  let deleteVacancy = await Vacancy.deleteMany({
+    dateAndTimeCreated: currentDate,
+  });
+  console.log(deleteVacancy);
+  return deleteVacancy ? true : false;
 };
 
 module.exports = { findVacancyForDelete };

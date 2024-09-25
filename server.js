@@ -8,12 +8,15 @@ const {
   removeOldCompanyRecords,
 } = require("./database/Request/Company");
 const {findVacancyForDelete} = require('./database/Request/Vacancy')
+const { findFastWorkForDelete } = require("./database/Request/FastWork");
+
 const app = express();
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");
 });
 findVacancyForDelete()
+findFastWorkForDelete()
 // schedule.scheduleJob("*/5 * * * * *", async () => {
 //   try {
 //     await console.log("Проверка подписок на премиум");
