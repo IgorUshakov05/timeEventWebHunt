@@ -28,34 +28,79 @@ function getNextDateInDays(typePremium) {
 
 const removePremium = async () => {
   try {
-    let correntDate = await getCurrentDateInMSK();
-    console.log("Текущие подписки:", correntDate.toString());
+    let currentDate = await getCurrentDateInMSK().toString();
+    console.log("Текущие подписки:", currentDate);
+
     let findCurrentPremium = await PremiumScheme.find({
-      nextTimePay: correntDate,
+      nextTimePay: currentDate,
     });
-    if (findCurrentPremium == []) return false;
-    for (const item of findCurrentPremium) {
+    if (findCurrentPremium.length === 0) {
+      return false;
+    }
+
+    const failedPayments = [];
+
+    const paymentPromises = findCurrentPremium.map(async (item) => {
       if (item.saved) {
-        let pay = await Pay(
-          item.amount,
-          item.paymentId,
-          item.userID,
-          getNextDateInDays(item.typePremium)
-        );
-        console.log("Оплата подписки:", pay);
-        return;
+        try {
+          const pay = await Pay(
+            item.amount,
+            item.paymentId,
+            item.userID,
+            getNextDateInDays(item.typePremium)
+          );
+          console.log("Оплата подписки:", pay);
+          sendWebPush(
+            "Автопродление подписки",
+            "Подписка была продлена",
+            item.userID
+          );
+        } catch (error) {
+          console.error(
+            "Ошибка при оплате подписки для пользователя:",
+            item.userID
+          );
+          sendWebPush(
+            "Не удалось продлить подписку",
+            "Подписка была удалена",
+            item.userID
+          );
+
+          failedPayments.push(item.userID);
+        }
       }
-      let removePremium = await PremiumScheme.findOneAndDelete({
-        userID: item.userID,
+
+      const removePremium = await PremiumScheme.deleteMany({
+        userID: failedPayments,
       });
       console.log("Удаляем подписку:", removePremium);
+    });
+
+    await Promise.all(paymentPromises);
+
+    if (failedPayments.length > 0) {
+      console.log("Не удалось оплатить следующие подписки:", failedPayments);
     }
-    console.log("Текущие подписки:", findCurrentPremium);
+
     return true;
   } catch (e) {
     console.error("Ошибка при удалении подписок:", e);
     return false;
   }
+};
+
+const sendWebPush = (title, text, userID) => {
+  fetch(`${process.env.MAIN_SERVER}/notification/send-notification/${userID}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      authorization: process.env.API_KEY_WEBPSUH,
+    },
+    body: JSON.stringify({ title, text }),
+  })
+    .then((obj) => obj.json())
+    .then((data) => console.log(data, "данные"))
+    .catch((error) => console.error("Error:", error));
 };
 
 module.exports = removePremium;

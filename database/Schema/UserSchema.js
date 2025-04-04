@@ -15,7 +15,7 @@ const expiriensSchema = new mongoose.Schema({
   company: { type: String, required: true },
   typeData: { type: String, required: true },
   special: { type: String, required: true },
-  date:{ type: String, required: true },
+  date: { type: String, required: true },
   description: { type: String, required: true },
 });
 const skillsScheme = new mongoose.Schema({
@@ -91,14 +91,10 @@ const schema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  premium: {
-    type: Boolean,
-    default: false,
-  },
   chatList: {
     type: String,
     require: true,
-    unique: true
+    unique: true,
   },
   description: {
     type: String,
@@ -113,10 +109,9 @@ const schema = new mongoose.Schema({
   skills: [skillsScheme],
   avatar: {
     type: String,
-    default: "./assets/pictures/defaultAvatar.png",
   },
-  favorite:[favoriteScheme],
-  expiriens:[expiriensSchema],
+  favorite: [favoriteScheme],
+  expiriens: [expiriensSchema],
   education: [eduScheme],
 });
 module.exports = mongoose.model("User", schema);

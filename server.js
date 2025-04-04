@@ -15,8 +15,9 @@ const app = express();
 app.get("/", (req, res) => {
   res.send("Hello, World!");
 });
-findVacancyForDelete()
-findFastWorkForDelete()
+// findVacancyForDelete()
+// findFastWorkForDelete()
+removePremium();
 // schedule.scheduleJob("*/5 * * * * *", async () => {
 //   try {
 //     await console.log("Проверка подписок на премиум");

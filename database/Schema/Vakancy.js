@@ -1,18 +1,26 @@
 const mongoose = require("mongoose");
 
-const skillsSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
+const skillsSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+    },
   },
-});
+  { _id: false }
+);
 
-const typeWorkSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
+const typeWorkSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+    },
   },
-});
+  {
+    _id: false,
+  }
+);
 
 const priceSchema = new mongoose.Schema({
   minPrice: {
@@ -29,21 +37,38 @@ const priceSchema = new mongoose.Schema({
   },
 });
 
-const responseSchema = new mongoose.Schema({
-  userID: {
-    type: String,
-    required: false,
+const responseSchema = new mongoose.Schema(
+  {
+    userID: {
+      type: String,
+      required: false,
+    },
+    message: {
+      type: String,
+      required: false,
+    },
+    request: {
+      type: Boolean,
+      required: false,
+      default: null,
+    },
+    isRead: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    hrMessage: {
+      type: String,
+      default: null,
+      required: false,
+    },
+    datetime: {
+      type: Date,
+      require: true,
+    },
   },
-  message: {
-    type: String,
-    required: false,
-  },
-  request: {
-    type: Boolean,
-    required: false,
-    default: false,
-  }
-});
+  { _id: false }
+);
 
 const vacancySchema = new mongoose.Schema({
   id: {
@@ -69,7 +94,11 @@ const vacancySchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  dateAndTimeCreated: {
+  dataCreated: {
+    type: Date,
+    default: Date.now, 
+  },
+  dateRemove: {
     type: String,
     required: true,
   },

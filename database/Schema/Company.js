@@ -1,11 +1,14 @@
 const mongoose = require("mongoose");
 
-const listHRSchema = new mongoose.Schema({
-  userID: {
-    type: String,
-    required: true,
+const listHRSchema = new mongoose.Schema(
+  {
+    userID: {
+      type: String,
+      required: true,
+    },
   },
-});
+  { _id: false }
+);
 
 const documentSchema = new mongoose.Schema({
   certificate_of_state_registration: {
@@ -21,7 +24,14 @@ const documentSchema = new mongoose.Schema({
     required: true,
   },
 });
-
+const RequestItem = new mongoose.Schema(
+  {
+    id: { type: String, required: true, unique: true },
+    userID: { type: String, required: true, unique: true },
+    date: { type: Date, required: true },
+  },
+  { _id: false }
+);
 const vacancySchema = new mongoose.Schema({
   id: {
     type: String,
@@ -75,6 +85,7 @@ const vacancySchema = new mongoose.Schema({
     default: false,
   },
   userList: [listHRSchema],
+  RequestList: [RequestItem],
   paymentId: {
     type: String,
     required: true,
