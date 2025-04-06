@@ -1,6 +1,9 @@
 const PremiumScheme = require("../Schema/premium");
 const { Temporal } = require("@js-temporal/polyfill");
+const sendWebPush = require("../../web-push/push");
+const { getUserEndpoint } = require("./WebPush");
 const Pay = require("./PayPremium");
+const { EndSubNotification } = require("./SubscriptionNotification");
 
 function getCurrentDateInMSK() {
   return Temporal.Now.plainDateISO();
@@ -50,7 +53,7 @@ const removePremium = async () => {
             getNextDateInDays(item.typePremium)
           );
           console.log("Оплата подписки:", pay);
-          sendWebPush(
+          sendWebPushOnMainServer(
             "Автопродление подписки",
             "Подписка была продлена",
             item.userID
@@ -60,9 +63,10 @@ const removePremium = async () => {
             "Ошибка при оплате подписки для пользователя:",
             item.userID
           );
-          sendWebPush(
+          let createEndNotification = await EndSubNotification(item.userID);
+          sendWebPushOnMainServer(
             "Не удалось продлить подписку",
-            "Подписка была удалена",
+            "Оформить подписку снова?",
             item.userID
           );
 
@@ -89,7 +93,7 @@ const removePremium = async () => {
   }
 };
 
-const sendWebPush = (title, text, userID) => {
+const sendWebPushOnMainServer = (title, text, userID) => {
   fetch(`${process.env.MAIN_SERVER}/notification/send-notification/${userID}`, {
     method: "POST",
     headers: {
